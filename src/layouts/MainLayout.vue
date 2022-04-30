@@ -17,6 +17,16 @@
       </q-toolbar>
     </q-header>
 
+    <q-footer elevated>
+      <q-toolbar>
+        <!-- <q-toolbar-title></q-toolbar-title> -->
+        <q-tabs>
+          <q-route-tab name="Home" icon="Home" label="Home" />
+          <q-route-tab name="Camira" icon="Camira" label="Camira" />
+        </q-tabs>
+      </q-toolbar>
+    </q-footer>
+
     <q-drawer v-model="leftDrawerOpen" show-if-above bordered>
       <q-list>
         <q-item-label header> </q-item-label>
