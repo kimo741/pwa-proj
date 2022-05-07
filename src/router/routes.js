@@ -2,9 +2,9 @@ const routes = [
   {
     path: "/",
     component: () => import("layouts/MainLayout.vue"),
-    children: [{ path: "", component: () => import("src/pages/pageHome.vue") }],
     children: [
-      { path: "", component: () => import("src/pages/pageCamera.vue") },
+      { path: "/", component: () => import("src/pages/pageHome.vue") },
+      { path: "/camera", component: () => import("src/pages/pageCamera.vue") },
     ],
   },
 
