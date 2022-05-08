@@ -46,7 +46,13 @@
         dense
       >
         <template v-slot:append>
-          <q-btn round dense flat icon="eva-navigation-2-outline" />
+          <q-btn
+            round
+            @click="getLocation"
+            dense
+            flat
+            icon="eva-navigation-2-outline"
+          />
         </template>
       </q-input>
     </div>
@@ -59,7 +65,10 @@
 <script>
 import axios from "axios";
 import { uid } from "quasar";
+import { timeouts } from "retry";
 import { defineComponent } from "vue";
+import { useQuasar } from "quasar";
+
 require("md-gum-polyfill"); // prifexes //
 
 export default defineComponent({
@@ -101,25 +110,24 @@ export default defineComponent({
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
       this.imageCapture = true;
       this.post.photo = this.dataURItoBlob(canvas.toDataURL());
+      this.disableCamera();
     },
     captureImagefallback(file) {
       let canvas = this.$refs.canvas;
       let context = canvas.getContext("2d");
-
       // this.post.photo = file;
-      var reader = new FileReader();
+      let reader = new FileReader();
+      var img = new Image();
       reader.onload = (event) => {
-        var img = new Image();
         img.onload = () => {
           canvas.width = img.width;
           canvas.height = img.height;
+          this.imageCapture = true;
           context.drawImage(img, 0, 0);
-          // this.imageCapture = true;
         };
-        img.src = event.target;
+        img.src = event.target.result;
       };
       reader.readAsDataURL(file.target.files[0]);
-      // console.log(reader);
     },
 
     dataURItoBlob(dataURI) {
@@ -145,6 +153,55 @@ export default defineComponent({
       var blob = new Blob([ab], { type: mimeString });
       return blob;
     },
+    disableCamera() {
+      this.$refs.video.srcObject.getVideoTracks().forEach((track) => {
+        track.stop();
+      });
+    },
+    getLocation() {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          this.getCityAndCuntry(position);
+        },
+        (err) => {
+          this.locationError();
+          console.log("catch 1 run");
+        },
+        { timeouts: 500 }
+      );
+    },
+    getCityAndCuntry(possetion) {
+      let apiUrl = `https://geocode.xyz/${possetion.coords.latitude},${possetion.coords.longitude}?json=1`;
+      this.$axios
+        .get(apiUrl)
+        .then((res) => {
+          return console.log(res);
+          // console.log(res);
+          // this.locationSuccess(res);
+        })
+        .catch((err) => {
+          this.locationError(err);
+          console.log(err);
+        });
+    },
+    locationSuccess(resp) {
+      this.post.location = resp.data.city;
+      if (resp.data.country) {
+        this.post.location += `, ${resp.data.country}`;
+      }
+    },
+    locationError() {
+      this.$q.dialog({
+        title: "Error",
+        message: "Cloud not find location",
+      });
+      console.log(this.$q);
+    },
+  },
+  beforeUnmount() {
+    if (this.cameraSupport) {
+      this.disableCamera();
+    }
   },
   mounted() {
     this.initcamera();
