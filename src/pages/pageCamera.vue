@@ -39,14 +39,11 @@
       />
     </div>
     <div class="row justify-center q-ma-md">
-      <q-input
-        v-model="post.location"
-        class="col col-sm-8"
-        label="Location"
-        dense
-      >
+      <q-input v-model="post.location" label="Location" flat>
+        <q-input class="" :loading="locationLoading" v-model="text" flat />
         <template v-slot:append>
           <q-btn
+            v-show="!locationLoading"
             round
             @click="getLocation"
             dense
@@ -85,6 +82,7 @@ export default defineComponent({
       imageCapture: false,
       cameraSupport: true,
       imageUpload: "",
+      locationLoading: false,
     };
   },
   methods: {
@@ -161,6 +159,7 @@ export default defineComponent({
     getLocation() {
       navigator.geolocation.getCurrentPosition(
         (position) => {
+          this.locationLoading = true;
           this.getCityAndCuntry(position);
         },
         (err) => {
@@ -175,9 +174,9 @@ export default defineComponent({
       this.$axios
         .get(apiUrl)
         .then((res) => {
-          return console.log(res);
           // console.log(res);
-          // this.locationSuccess(res);
+          this.locationSuccess(res);
+          this.locationLoading = false;
         })
         .catch((err) => {
           this.locationError(err);
@@ -195,6 +194,7 @@ export default defineComponent({
         title: "Error",
         message: "Cloud not find location",
       });
+      this.locationLoading = false;
       console.log(this.$q);
     },
   },
